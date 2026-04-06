@@ -9,9 +9,21 @@ Practice all the popular vowels: A, E, I, O, U and more! This app helps you with
 
 The main function of the app is you will speak individual vowel sounds (diphthongs) and the app will show you what we hear. And there is a configuration page to help get better results, this helps if you don't have professional recording gear.
 
+Hopefully this project can help people with Val pronunciation and accent neutralization. It can be used by individuals and in a clinical setting.
+
+## Project scope
+
+We are seeking contributions and improvements to this program. But at the moment we are limited to implementing monophthong vowel recognition.
+
+We will consider changes to the algorithm. However, any consideration of this must be accompanied by published papers and test data that we can replicate. See our existing model folder, and test cases!
+
+We are also happy to accept donations of test data. If you have a large corpus of labeled data, please email us and share your experience with using this app.
+
+We want this app to work well for an individual or a clinical setting. If there is an opportunity for a major usability improvement in these settings, let's talk about it.
+
 ## Test data
 
-The has built-in test cases which replicate the Hillenbrand 1995 data set. Although you will need to supply those audio files and data files your self. Instructions are in the test folder.
+The has built-in test cases which replicate the Hillenbrand 1995 data set. Although you will need to supply those audio files and data files yourself. Instructions are in the test folder.
 
 ## Research
 
