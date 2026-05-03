@@ -28,12 +28,20 @@ class Hillenbrand1995Reader {
         let f4: Double?
     }
     
+    /// True when the Hillenbrand 1995 data set is bundled with the test target.
+    /// The data set is not redistributable and is excluded from the repository,
+    /// so tests that depend on it should be conditionally enabled on this flag.
+    static var isDataAvailable: Bool {
+        let bundle = Bundle(for: Hillenbrand1995Reader.self)
+        return bundle.url(forResource: "vowdata", withExtension: "dat") != nil
+    }
+
     static func loadVowelData() -> [VowelData] {
         let bundle = Bundle(for: Hillenbrand1995Reader.self)
-        guard let resourceURL = bundle.resourceURL?.appendingPathComponent("vowdata.dat") else {
-            fatalError("File not found")
+        guard let resourceURL = bundle.url(forResource: "vowdata", withExtension: "dat"),
+              let fileContents = try? String(contentsOf: resourceURL, encoding: .utf8) else {
+            return []
         }
-        let fileContents = try! String(contentsOf: resourceURL, encoding: .utf8)
         let dataLineRegex = /(?<filename>[mwbg]\d\d\w\w)(?<columns>(\W+\d+){15}?)/
         let dataLines = fileContents.split(whereSeparator: \.isNewline).compactMap { line in
             try! dataLineRegex.prefixMatch(in: line)?.output

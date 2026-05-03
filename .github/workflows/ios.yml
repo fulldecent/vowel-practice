@@ -1,0 +1,59 @@
+name: iOS Build and Test
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: "Vowel Practice"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Show available simulators
+        run: xcrun simctl list devices available
+
+      - name: Build for iOS Simulator
+        run: |+
+          xcodebuild -project "Vowel Practice.xcodeproj" \
+                     -scheme "Vowel Practice" \
+                     -configuration Debug \
+                     -destination "platform=iOS Simulator,name=iPhone 17,OS=latest" \
+                     -allowProvisioningUpdates \
+                     CODE_SIGNING_ALLOWED=NO \
+                     build
+
+      - name: Test on iOS Simulator
+        run: |+
+          xcodebuild -project "Vowel Practice.xcodeproj" \
+                     -scheme "Vowel Practice" \
+                     -configuration Debug \
+                     -destination "platform=iOS Simulator,name=iPhone 17,OS=latest" \
+                     -allowProvisioningUpdates \
+                     CODE_SIGNING_ALLOWED=NO \
+                     test
+
+      - name: Archive for Distribution
+        run: |
+          xcodebuild -project "Vowel Practice.xcodeproj" \
+                     -scheme "Vowel Practice" \
+                     -configuration Release \
+                     -destination "generic/platform=iOS" \
+                     -allowProvisioningUpdates \
+                     archive -archivePath ./build/VowelPractice.xcarchive || echo "Archive step failed - may need code signing setup"

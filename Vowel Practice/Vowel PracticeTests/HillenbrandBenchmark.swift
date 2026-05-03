@@ -14,11 +14,13 @@ struct HillenbrandBenchmark {
     init() {
         hillenbrandData = Hillenbrand1995Reader.loadVowelData()
     }
-    
-    @Test func loadHillenBrandData() {
+
+    @Test(.enabled(if: Hillenbrand1995Reader.isDataAvailable,
+                   "Hillenbrand 1995 data is not bundled with the test target; see README"))
+    func loadHillenBrandData() {
         #expect(!hillenbrandData.isEmpty)
     }
-    
+
     /*
     @Test func checkDuration() {
         hillenbrandData.forEach { vowel, data in
@@ -29,8 +31,10 @@ struct HillenbrandBenchmark {
         }
     }
     */
-    
-    @Test func checkFormants() {
+
+    @Test(.enabled(if: Hillenbrand1995Reader.isDataAvailable,
+                   "Hillenbrand 1995 data is not bundled with the test target; see README"))
+    func checkFormants() {
         hillenbrandData[..<10].forEach { data in
             let wavFile = loadTestWavFile(data.filename)
             let analysis = FormantAnalysis(samples: wavFile.samples, sampleRate: wavFile.sampleRate)
