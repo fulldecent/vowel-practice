@@ -29,18 +29,65 @@ The has built-in test cases which replicate the Hillenbrand 1995 data set. Altho
 
 Here are citations and research that this app is based on.
 
-  * Speech Acoustics Made Easy http://web.archive.org/web/20120914101638/http://www.cochlear.com/files/assets/speech_acoustics_made_easy.pdf
-  * English vowel word reference http://www.fonetiks.org/engsou2am.html
-  * Chinese vowel diagram http://en.wikipedia.org/wiki/Chinese_vowel_diagram
-  * Wiki page http://en.wikipedia.org/wiki/Formant
-  * The National Center for Voice and Speech http://www.ncvs.org/ncvs/tutorials/voiceprod/tutorial/filter.html
-  * Linguistics 110 Berkeley http://linguistics.berkeley.edu/~kjohnson/ling110/Homework_assignments/HW7_PlotVowels/PlotYourVowels.pdf
-  * MATLAB Speech Signal Analysis http://www.phon.ucl.ac.uk/courses/spsci/matlab/lect10.html
-  * MATLAB Formant Tracker example http://www.mathworks.com/matlabcentral/fileexchange/8959-formant-tracker
-  * Formant Java example http://chronos.ece.miami.edu/~dasp/SeniorProject/Presentation/416Presentation.pdf
-  * Digital Bubble Bath - Don H. Johnson Great discussion on formant analysis and practical implementation http://www.clear.rice.edu/elec431/projects96/digitalbb/formants.html
-  * https://github.com/MLSpeech/DeepFormants
-  * https://2020.ieeeicassp.org/
-  * http://htk.eng.cam.ac.uk/
-  * https://github.com/jaekookang/p2fa_py3
-  * https://github.com/gre/zpeech
+* Speech Acoustics Made Easy <http://web.archive.org/web/20120914101638/http://www.cochlear.com/files/assets/speech_acoustics_made_easy.pdf>
+* English vowel word reference <http://www.fonetiks.org/engsou2am.html>
+* Chinese vowel diagram <http://en.wikipedia.org/wiki/Chinese_vowel_diagram>
+* Wiki page <http://en.wikipedia.org/wiki/Formant>
+* The National Center for Voice and Speech <http://www.ncvs.org/ncvs/tutorials/voiceprod/tutorial/filter.html>
+* Linguistics 110 Berkeley <http://linguistics.berkeley.edu/~kjohnson/ling110/Homework_assignments/HW7_PlotVowels/PlotYourVowels.pdf>
+* MATLAB Speech Signal Analysis <http://www.phon.ucl.ac.uk/courses/spsci/matlab/lect10.html>
+* MATLAB Formant Tracker example <http://www.mathworks.com/matlabcentral/fileexchange/8959-formant-tracker>
+* Formant Java example <http://chronos.ece.miami.edu/~dasp/SeniorProject/Presentation/416Presentation.pdf>
+* Digital Bubble Bath - Don H. Johnson Great discussion on formant analysis and practical implementation <http://www.clear.rice.edu/elec431/projects96/digitalbb/formants.html>
+* <https://github.com/MLSpeech/DeepFormants>
+* <https://2020.ieeeicassp.org/>
+* <http://htk.eng.cam.ac.uk/>
+* <https://github.com/jaekookang/p2fa_py3>
+* <https://github.com/gre/zpeech>
+
+### Releasing a new version
+
+The release process uses [fastlane](https://fastlane.tools). See [fastlane/README.md](fastlane/README.md) for one-time setup (Ruby, the App Store Connect API key at `fastlane/api_key.json`).
+
+The pipeline has three stages, run as separate lanes:
+
+```plain
+bump_version  →  beta (TestFlight)  →  release (App Store)
+```
+
+1. Bump the marketing version (`CFBundleShortVersionString`) and build number:
+
+   ```bash
+   bundle exec fastlane bump_version           # patch (default): 4.0.1 → 4.0.2
+   bundle exec fastlane bump_version bump:minor
+   bundle exec fastlane bump_version bump:major
+   ```
+
+   Commit the version bump.
+
+2. Build, sign, and ship to TestFlight. This bumps the build number, archives, exports, and uploads:
+
+   ```bash
+   bundle exec fastlane ios beta # or just `beta` with no ios
+   bundle exec fastlane mac beta
+   ```
+
+   Test the build on a real device via TestFlight.
+
+3. Submit to the App Store. This captures screenshots, uploads them to the editable version, attaches the most recent TestFlight build, and submits for review with auto-release on approval. You'll be prompted for the release notes ("What's New" in en-US), or you can pass them inline:
+
+   ```bash
+   bundle exec fastlane ios screenshots            # capture only, no upload
+   bundle exec fastlane ios upload_screenshots     # upload existing screenshots
+   bundle exec fastlane ios release notes:"Rebuild"
+   
+   bundle exec fastlane mac screenshots            # capture only, no upload
+   bundle exec fastlane mac upload_screenshots     # upload existing screenshots
+   bundle exec fastlane mac release notes:"Rebuild"
+   ```
+   
+   Screenshots are written to `fastlane/screenshots/` and built artifacts to `build/`. Both are gitignored.
+
+#### Note: rsync workaround
+
+The `before_all` hook in [fastlane/Fastfile](fastlane/Fastfile) strips `/opt/homebrew` and `/usr/local` from `PATH` before `xcodebuild -exportArchive` runs. Without this, Xcode 26's IPA packaging step fails with `Copy failed` because `/usr/bin/rsync` (openrsync 2.6.9) and Homebrew's `rsync` 3.x interpret the `-E` flag differently. Sanitizing `PATH` ensures both ends use openrsync.

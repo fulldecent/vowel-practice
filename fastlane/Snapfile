@@ -1,0 +1,29 @@
+# Snapfile — configuration for `fastlane snapshot`
+# Docs: https://docs.fastlane.tools/actions/snapshot/
+
+devices([
+  "iPhone 17 Pro Max",
+  "iPad Pro 13-inch (M5)"
+])
+
+# Let snapshot pick the newest installed runtime automatically.
+# Fastlane currently mis-resolves 26.4.1 as 26.4 on some Xcode 26 setups.
+
+languages([
+  "en-US"
+])
+
+output_directory("./fastlane/screenshots")
+clear_previous_screenshots(true)
+
+scheme("Vowel Practice")
+project("./Vowel Practice.xcodeproj")
+
+# Only run the dedicated screenshot UI tests (avoid the boilerplate UI tests).
+only_testing(["Vowel PracticeUITests/Vowel_PracticeScreenshotsUITests"])
+
+skip_open_summary(true)
+override_status_bar(true)
+concurrent_simulators(true)
+number_of_retries(0)
+stop_after_first_error(true)

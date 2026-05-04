@@ -1,0 +1,18 @@
+# Gymfile — configuration for `fastlane gym` / `build_app`
+
+project("Vowel Practice.xcodeproj")
+scheme("Vowel Practice")
+configuration("Release")
+
+export_method("app-store")
+output_directory("./build")
+
+clean(true)
+
+export_options({
+  signingStyle: "automatic",
+  teamID: "8Q693ZG5RN"
+})
+
+xcargs("-allowProvisioningUpdates")
+export_xcargs("-allowProvisioningUpdates")

@@ -1,0 +1,17 @@
+# Deliverfile — configuration for `fastlane deliver` / `upload_to_app_store`
+
+app_identifier("net.phor.FormantPlotter")
+
+screenshots_path("./fastlane/screenshots")
+
+skip_binary_upload(true)
+skip_metadata(true)
+skip_app_version_update(false)
+
+overwrite_screenshots(true)
+
+submit_for_review(false)
+
+force(true)
+
+run_precheck_before_submit(false)

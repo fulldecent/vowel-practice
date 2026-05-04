@@ -1,0 +1,369 @@
+default_platform(:ios)
+
+XCODEPROJ = "Vowel Practice.xcodeproj"
+SCHEME    = "Vowel Practice"
+APP_TARGET = "Vowel Practice"
+
+def xcodeproj_path
+  File.expand_path(XCODEPROJ, __dir__ + "/..")
+end
+
+def current_marketing_version
+  require "xcodeproj"
+  project = Xcodeproj::Project.open(xcodeproj_path)
+  target = project.targets.find { |t| t.name == APP_TARGET }
+  UI.user_error!("Target #{APP_TARGET} not found in #{xcodeproj_path}") unless target
+  target.build_configurations.first.build_settings["MARKETING_VERSION"]
+end
+
+def set_marketing_version!(new_version)
+  require "xcodeproj"
+  project = Xcodeproj::Project.open(xcodeproj_path)
+  target = project.targets.find { |t| t.name == APP_TARGET }
+  UI.user_error!("Target #{APP_TARGET} not found in #{xcodeproj_path}") unless target
+  target.build_configurations.each do |config|
+    config.build_settings["MARKETING_VERSION"] = new_version
+  end
+  project.save
+end
+
+def current_build_number
+  get_build_number(xcodeproj: xcodeproj_path).to_s.to_i
+end
+
+def bump_build_number!
+  next_build = current_build_number + 1
+  increment_build_number(
+    xcodeproj: xcodeproj_path,
+    build_number: next_build.to_s
+  )
+  next_build
+end
+
+def latest_ios_simulator_for(device_name)
+  require "json"
+
+  raw = sh("xcrun simctl list devices available --json", log: false)
+  devices_json = JSON.parse(raw).fetch("devices", {})
+
+  candidates = []
+  devices_json.each do |runtime_key, sims|
+    next unless runtime_key.include?("iOS")
+
+    version_match = runtime_key.match(/iOS[- ]([\d\.-]+)/i)
+    version = version_match ? version_match[1].tr("-", ".") : "0"
+
+    sims.each do |sim|
+      next if sim["isAvailable"] == false
+      next unless sim["name"] == device_name
+
+      udid = sim["udid"] || sim["identifier"]
+      next if udid.to_s.strip.empty?
+
+      candidates << {
+        name: device_name,
+        version: version,
+        udid: udid
+      }
+    end
+  end
+
+  UI.user_error!("No available iOS simulator found for '#{device_name}'") if candidates.empty?
+  candidates.max_by { |candidate| Gem::Version.new(candidate[:version]) }
+end
+
+before_all do
+  # Xcode 26's IPA packaging step shells out to /usr/bin/rsync (openrsync),
+  # which then spawns its receiver subprocess via PATH. If Homebrew rsync
+  # (3.x) is in PATH, the two halves disagree on the meaning of the `-E`
+  # flag and exportArchive fails with "Copy failed". Strip Homebrew out of
+  # PATH so both sides resolve to the same openrsync binary.
+  sanitized = ENV["PATH"].split(":").reject { |p| p.start_with?("/opt/homebrew", "/usr/local") }
+  ENV["PATH"] = sanitized.join(":")
+
+  config_path = File.expand_path("api_key.json", __dir__)
+  if File.exist?(config_path)
+    config = JSON.parse(File.read(config_path))
+    app_store_connect_api_key(
+      key_id: config["key_id"],
+      issuer_id: config["issuer_id"],
+      key_filepath: config["key_filepath"],
+      in_house: config.fetch("in_house", false)
+    )
+  end
+end
+
+# ============================================================================
+# Shared lanes (work for both iOS and macOS)
+# ============================================================================
+
+desc "Bump the marketing version. Pass bump:patch (default), bump:minor, or bump:major"
+lane :bump_version do |options|
+  bump_type = options[:bump] || "patch"
+  current = current_marketing_version
+  parts = current.split(".").map(&:to_i)
+  parts << 0 while parts.length < 3
+  case bump_type
+  when "major" then parts = [parts[0] + 1, 0, 0]
+  when "minor" then parts = [parts[0], parts[1] + 1, 0]
+  else              parts = [parts[0], parts[1], parts[2] + 1]
+  end
+  new_version = parts.join(".")
+  set_marketing_version!(new_version)
+  next_build = bump_build_number!
+  UI.success("Bumped to #{new_version} (build #{next_build})")
+end
+
+desc "Bump only the build number (used before each beta upload)"
+lane :bump_build do
+  bump_build_number!
+end
+
+# ============================================================================
+# iOS lanes
+# ============================================================================
+
+platform :ios do
+  desc "Generate App Store screenshots (iOS)"
+  lane :screenshots do
+    repo_root = File.expand_path("..", __dir__)
+    project_path = File.join(repo_root, XCODEPROJ)
+    output_dir = File.join(repo_root, "fastlane", "screenshots", "en-US")
+    cache_dir = File.join(Dir.home, "Library", "Caches", "tools.fastlane")
+    cache_screenshots_dir = File.join(cache_dir, "screenshots")
+    log_path = File.join(Dir.home, "Library", "Logs", "snapshot", "Vowel Practice-Vowel Practice.log")
+    derived_data = Dir.mktmpdir("snapshot_derived")
+    devices = ["iPhone 17 Pro Max", "iPad Pro 13-inch (M5)"]
+
+    FileUtils.mkdir_p(output_dir)
+    FileUtils.mkdir_p(cache_screenshots_dir)
+    FileUtils.mkdir_p(File.dirname(log_path))
+    File.write(File.join(cache_dir, "language.txt"), "en-US\n")
+    File.write(File.join(cache_dir, "locale.txt"), "en-US\n")
+    File.write(File.join(cache_dir, "snapshot-launch_arguments.txt"), "\n")
+
+    # Keep output deterministic by clearing screenshots from previous runs.
+    FileUtils.rm_f(Dir.glob(File.join(output_dir, "*.png")))
+    FileUtils.rm_f(Dir.glob(File.join(cache_screenshots_dir, "*.png")))
+
+    selected_sims = devices.map { |device_name| latest_ios_simulator_for(device_name) }
+    selected_sims.each do |sim|
+      UI.message("Using device '#{sim[:name]}' with runtime '#{sim[:version]}'")
+      sh("xcrun simctl bootstatus #{sim[:udid]} -b &> /dev/null")
+      sh("xcrun simctl status_bar #{sim[:udid]} override --time 09:41 --dataNetwork wifi --wifiMode active --wifiBars 3 --cellularMode active --operatorName '' --cellularBars 4 --batteryState charged --batteryLevel 100 &> /dev/null")
+    end
+
+    destinations = selected_sims.map { |sim| "-destination 'platform=iOS Simulator,id=#{sim[:udid]}'" }.join(" ")
+    sh("set -o pipefail && xcodebuild -scheme #{Shellwords.escape(SCHEME)} -project #{Shellwords.escape(project_path)} -derivedDataPath #{Shellwords.escape(derived_data)} -only-testing:#{Shellwords.escape('Vowel PracticeUITests/Vowel_PracticeScreenshotsUITests')} #{destinations} FASTLANE_SNAPSHOT=YES FASTLANE_LANGUAGE=en-US build test | tee #{Shellwords.escape(log_path)} | xcpretty")
+
+    screenshots = Dir.glob(File.join(cache_screenshots_dir, "*.png")).sort
+    UI.user_error!("No screenshots were produced in #{cache_screenshots_dir}") if screenshots.empty?
+
+    screenshots.each do |src|
+      dst = File.join(output_dir, File.basename(src))
+      FileUtils.cp(src, dst)
+      UI.message("Saved #{dst}")
+    end
+  end
+
+  desc "Upload locally captured iOS screenshots to App Store Connect"
+  lane :upload_screenshots do
+    upload_to_app_store(
+      platform: "ios",
+      app_version: current_marketing_version,
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_screenshots: false,
+      overwrite_screenshots: true,
+      submit_for_review: false,
+      reject_if_possible: true,
+      force: true,
+      run_precheck_before_submit: false
+    )
+  end
+
+  desc "Build a signed iOS .ipa, upload to TestFlight, then bump the build number"
+  lane :beta do
+    bump_build_number!
+    build_app(
+      project: XCODEPROJ,
+      scheme: SCHEME,
+      configuration: "Release",
+      export_method: "app-store",
+      destination: "generic/platform=iOS",
+      clean: true,
+      output_directory: "build",
+      output_name: "Vowel Practice.ipa"
+    )
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      skip_submission: true
+    )
+  end
+
+  desc "Submit the latest TestFlight iOS build for App Store review"
+  lane :release do |options|
+    notes = options[:notes]
+    UI.user_error!("Release notes are required (pass notes:'...').") if notes.nil? || notes.strip.empty?
+
+    upload_to_app_store(
+      platform: "ios",
+      app_version: current_marketing_version,
+      skip_binary_upload: true,
+      skip_metadata: false,
+      skip_screenshots: false,
+      overwrite_screenshots: true,
+      release_notes: { "en-US" => notes },
+      submit_for_review: true,
+      automatic_release: true,
+      precheck_include_in_app_purchases: false,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false,
+        content_rights_contains_third_party_content: false
+      },
+      force: true
+    )
+  end
+end
+
+# ============================================================================
+# macOS lanes
+# ============================================================================
+
+platform :mac do
+  desc "Generate Mac App Store screenshots"
+  lane :screenshots do
+    repo_root = File.expand_path("..", __dir__)
+    derived_data = File.join(repo_root, "build", "mac_screenshots_dd")
+    out_dir = File.join(repo_root, "fastlane", "screenshots", "en-US")
+    capture_dir = "/tmp/vowel-practice-mac-screenshots"
+    FileUtils.rm_rf(derived_data)
+    FileUtils.rm_rf(capture_dir)
+    FileUtils.mkdir_p(out_dir)
+
+    # The host app captures its own window contents to `capture_dir`. That
+    # requires writing outside its sandbox container, so we disable the App
+    # Sandbox just for this build (the App Store build is unaffected).
+    sh("cd #{Shellwords.escape(repo_root)} && " \
+       "xcodebuild -scheme #{Shellwords.escape(SCHEME)} " \
+       "-project #{Shellwords.escape(XCODEPROJ)} " \
+       "-derivedDataPath #{Shellwords.escape(derived_data)} " \
+       "-destination 'platform=macOS' " \
+       "-only-testing:'Vowel PracticeUITests/Vowel_PracticeScreenshotsMacUITests' " \
+       "-allowProvisioningUpdates ENABLE_APP_SANDBOX=NO test")
+
+    pngs = Dir.glob(File.join(capture_dir, "Mac-*.png")).sort
+    UI.user_error!("No screenshots produced in #{capture_dir}") if pngs.empty?
+    pngs.each do |src|
+      dst = File.join(out_dir, File.basename(src))
+      FileUtils.cp(src, dst)
+      UI.message("Saved #{dst}")
+    end
+  end
+
+  desc "Upload locally captured macOS screenshots to App Store Connect"
+  lane :upload_screenshots do
+    repo_root = File.expand_path("..", __dir__)
+    source_root = File.join(repo_root, "fastlane", "screenshots")
+    staged_root = Dir.mktmpdir("mac_screenshots_upload")
+
+    copied_count = 0
+    Dir.glob(File.join(source_root, "*")).sort.each do |locale_dir|
+      next unless File.directory?(locale_dir)
+      locale = File.basename(locale_dir)
+      mac_pngs = Dir.glob(File.join(locale_dir, "Mac-*.png")).sort
+      next if mac_pngs.empty?
+
+      staged_locale_dir = File.join(staged_root, locale)
+      FileUtils.mkdir_p(staged_locale_dir)
+      mac_pngs.each do |src|
+        FileUtils.cp(src, File.join(staged_locale_dir, File.basename(src)))
+        copied_count += 1
+      end
+    end
+
+    UI.user_error!("No macOS screenshots found. Expected files like 'Mac-*.png' under #{source_root}/<locale>/") if copied_count.zero?
+
+    upload_to_app_store(
+      platform: "osx",
+      app_version: current_marketing_version,
+      screenshots_path: staged_root,
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_screenshots: false,
+      overwrite_screenshots: true,
+      submit_for_review: false,
+      reject_if_possible: true,
+      force: true,
+      run_precheck_before_submit: false
+    )
+  end
+
+  desc "Build a signed macOS .pkg, upload to TestFlight, then bump the build number"
+  lane :beta do
+    bump_build_number!
+    build_dir = File.expand_path("../build", __dir__)
+    archive_path = File.join(build_dir, "Vowel Practice macOS.xcarchive")
+    pkg_path = File.join(build_dir, "Vowel Practice.pkg")
+    FileUtils.mkdir_p(build_dir)
+    FileUtils.rm_rf(archive_path)
+    FileUtils.rm_f(pkg_path)
+
+    sh("cd #{Shellwords.escape(File.expand_path('..', __dir__))} && " \
+       "xcodebuild -project #{Shellwords.escape(XCODEPROJ)} " \
+       "-scheme #{Shellwords.escape(SCHEME)} -configuration Release " \
+       "-destination 'generic/platform=macOS' " \
+       "-archivePath #{Shellwords.escape(archive_path)} " \
+       "-allowProvisioningUpdates clean archive")
+
+    export_options_path = File.join(build_dir, "MacExportOptions.plist")
+    File.write(export_options_path, <<~PLIST)
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0"><dict>
+        <key>method</key><string>app-store</string>
+        <key>signingStyle</key><string>automatic</string>
+        <key>teamID</key><string>8Q693ZG5RN</string>
+      </dict></plist>
+    PLIST
+
+    sh("xcodebuild -exportArchive " \
+       "-archivePath #{Shellwords.escape(archive_path)} " \
+       "-exportOptionsPlist #{Shellwords.escape(export_options_path)} " \
+       "-exportPath #{Shellwords.escape(build_dir)} " \
+       "-allowProvisioningUpdates")
+
+    UI.user_error!("macOS .pkg not found at #{pkg_path}") unless File.exist?(pkg_path)
+
+    upload_to_testflight(
+      pkg: pkg_path,
+      skip_waiting_for_build_processing: true,
+      skip_submission: true
+    )
+  end
+
+  desc "Submit the latest TestFlight macOS build for App Store review"
+  lane :release do |options|
+    notes = options[:notes]
+    UI.user_error!("Release notes are required (pass notes:'...').") if notes.nil? || notes.strip.empty?
+
+    upload_to_app_store(
+      platform: "osx",
+      app_version: current_marketing_version,
+      skip_binary_upload: true,
+      skip_metadata: false,
+      skip_screenshots: true,
+      release_notes: { "en-US" => notes },
+      submit_for_review: true,
+      automatic_release: true,
+      precheck_include_in_app_purchases: false,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false,
+        content_rights_contains_third_party_content: false
+      },
+      force: true
+    )
+  end
+end

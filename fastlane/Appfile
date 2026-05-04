@@ -1,0 +1,5 @@
+app_identifier("net.phor.FormantPlotter")
+apple_id(ENV["FASTLANE_APPLE_ID"]) # set FASTLANE_APPLE_ID in your shell or .env
+
+itc_team_id(ENV["FASTLANE_ITC_TEAM_ID"]) if ENV["FASTLANE_ITC_TEAM_ID"]
+team_id("8Q693ZG5RN")
