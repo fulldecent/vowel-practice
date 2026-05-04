@@ -38,16 +38,22 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		D9B257FF2E77B6D30048AA84 /* Vowel Practice */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = "Vowel Practice";
 			sourceTree = "<group>";
 		};
 		D9B2580E2E77B6D40048AA84 /* Vowel PracticeTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = "Vowel PracticeTests";
 			sourceTree = "<group>";
 		};
 		D9B258182E77B6D40048AA84 /* Vowel PracticeUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = "Vowel PracticeUITests";
 			sourceTree = "<group>";
 		};
@@ -146,8 +152,6 @@
 				D9B2580E2E77B6D40048AA84 /* Vowel PracticeTests */,
 			);
 			name = "Vowel PracticeTests";
-			packageProductDependencies = (
-			);
 			productName = "Formant AnalyzerTests";
 			productReference = D9B2580B2E77B6D40048AA84 /* Vowel PracticeTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -169,8 +173,6 @@
 				D9B258182E77B6D40048AA84 /* Vowel PracticeUITests */,
 			);
 			name = "Vowel PracticeUITests";
-			packageProductDependencies = (
-			);
 			productName = "Formant AnalyzerUITests";
 			productReference = D9B258152E77B6D40048AA84 /* Vowel PracticeUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
@@ -412,7 +414,7 @@
 				CODE_SIGN_ENTITLEMENTS = "Vowel Practice/Vowel_Practice.entitlements";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 13;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 8Q693ZG5RN;
 				ENABLE_APP_SANDBOX = YES;
@@ -449,7 +451,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 2.1;
+				MARKETING_VERSION = 2.1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "net.phor.Formant-Analyzer";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = net.phor.FormantPlotter;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = net.phor.FormantPlotter;
@@ -472,7 +474,7 @@
 				CODE_SIGN_ENTITLEMENTS = "Vowel Practice/Vowel_Practice.entitlements";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 13;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 8Q693ZG5RN;
 				ENABLE_APP_SANDBOX = YES;
@@ -509,7 +511,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 2.1;
+				MARKETING_VERSION = 2.1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "net.phor.Formant-Analyzer";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = net.phor.FormantPlotter;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = net.phor.FormantPlotter;
@@ -529,7 +531,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 13;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 8Q693ZG5RN;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -553,7 +555,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 13;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 8Q693ZG5RN;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -576,7 +578,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 13;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 8Q693ZG5RN;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -590,7 +592,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_TARGET_NAME = "Formant Analyzer";
+				TEST_TARGET_NAME = "Vowel Practice";
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Debug;
@@ -599,7 +601,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 13;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 8Q693ZG5RN;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -613,7 +615,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_TARGET_NAME = "Formant Analyzer";
+				TEST_TARGET_NAME = "Vowel Practice";
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Release;

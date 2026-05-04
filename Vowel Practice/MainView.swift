@@ -6,7 +6,7 @@ import SwiftUI
 
 struct MainView: View {
     @EnvironmentObject var viewModel: AppViewModel
-    @State var viewMode: ViewMode = .formant
+    @State var viewMode: ViewMode = MainView.initialViewMode()
 
     enum ViewMode: String, Identifiable {
         case formant = "Formants"
@@ -14,6 +14,21 @@ struct MainView: View {
         case help = "Help"
 
         var id: String { rawValue }
+    }
+
+    /// Allows UI tests (and tinkerers) to start the app on a particular page
+    /// by passing `-viewMode formant|chart|help` on the command line.
+    private static func initialViewMode() -> ViewMode {
+        let args = CommandLine.arguments
+        guard let i = args.firstIndex(of: "-viewMode"), i + 1 < args.count else {
+            return .formant
+        }
+        switch args[i + 1].lowercased() {
+        case "formant", "formants": return .formant
+        case "chart", "charts":     return .chart
+        case "help":                return .help
+        default:                    return .formant
+        }
     }
 
     var body: some View {

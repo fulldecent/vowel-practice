@@ -41,11 +41,19 @@ class AppViewModel: ObservableObject {
     // MARK: - Init
     init() {
         setupBindings()
+        autoLoadMockAudioIfRequested()
     }
     
     // MARK: - Public methods (recording control)
     
     func startRecording() {
+        // Test / screenshot hook: bypass the microphone entirely and analyze
+        // a bundled wav file. Pass `-mockAudio arm` (or any other resource
+        // name) on the command line.
+        if let mockName = mockAudioResourceName(), loadMockAudio(named: mockName) {
+            return
+        }
+
         Task {
             let granted = await audioRecorder.requestPermission()
             guard granted else {
@@ -174,5 +182,68 @@ class AppViewModel: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+    }
+
+    // MARK: - Mock audio (UI tests / screenshots)
+
+    /// Returns the name of a bundled wav resource to use instead of the
+    /// microphone, or nil. Pass `-mockAudio arm` on the command line.
+    private func mockAudioResourceName() -> String? {
+        let args = CommandLine.arguments
+        guard let i = args.firstIndex(of: "-mockAudio"), i + 1 < args.count else {
+            return nil
+        }
+        return args[i + 1]
+    }
+
+    /// If `-mockAudio NAME` was passed on the command line, load that bundled
+    /// wav file immediately so the app shows real formant data without
+    /// requiring microphone access. Used for UI tests and screenshots.
+    private func autoLoadMockAudioIfRequested() {
+        guard let name = mockAudioResourceName() else { return }
+        loadMockAudio(named: name)
+    }
+
+    /// Loads a bundled wav file, decodes it to mono Doubles, and pushes it
+    /// through the analysis pipeline as if it had just been recorded.
+    @discardableResult
+    func loadMockAudio(named name: String) -> Bool {
+        guard let url = Bundle.main.url(forResource: name, withExtension: "wav") else {
+            status = .error("Mock audio '\(name).wav' not found in bundle")
+            return false
+        }
+        do {
+            let audio = try Self.readWav(url: url)
+            handleRecordingComplete(audio)
+            return true
+        } catch {
+            status = .error("Failed to load mock audio: \(error.localizedDescription)")
+            return false
+        }
+    }
+
+    /// Reads a wav file and returns mono `Double` samples in `[-1, 1]`.
+    private static func readWav(url: URL) throws -> RecordedAudio {
+        let file = try AVAudioFile(forReading: url)
+        let format = file.processingFormat
+        let frameCount = AVAudioFrameCount(file.length)
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
+            throw NSError(domain: "Vowel Practice", code: -1, userInfo: [NSLocalizedDescriptionKey: "Could not allocate PCM buffer"])
+        }
+        try file.read(into: buffer)
+        guard let channelData = buffer.floatChannelData else {
+            throw NSError(domain: "Vowel Practice", code: -2, userInfo: [NSLocalizedDescriptionKey: "wav file has no float channel data"])
+        }
+        let frames = Int(buffer.frameLength)
+        let channels = Int(format.channelCount)
+        var samples = [Double](repeating: 0, count: frames)
+        for i in 0..<frames {
+            var sum: Float = 0
+            for c in 0..<channels {
+                sum += channelData[c][i]
+            }
+            samples[i] = Double(sum / Float(max(channels, 1)))
+        }
+        return RecordedAudio(samples: samples, sampleRate: format.sampleRate)
     }
 }
