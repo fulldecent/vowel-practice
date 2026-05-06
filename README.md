@@ -47,17 +47,48 @@ Here are citations and research that this app is based on.
 
 ### Releasing a new version
 
-The release process uses [fastlane](https://fastlane.tools). See [fastlane/README.md](fastlane/README.md) for one-time setup (Ruby, the App Store Connect API key at `fastlane/api_key.json`).
+The release process uses [fastlane](https://fastlane.tools).
 
-The pipeline has three stages, run as separate lanes:
+### One-time setup
 
-```plain
-bump_version  →  beta (TestFlight)  →  release (App Store)
+1. Install Ruby via rbenv (macOS system Ruby is too old for fastlane):
+
+   ```sh
+   brew install rbenv ruby-build
+   rbenv init # follow the printed shell setup instructions, then restart your shell
+   rbenv install   # installs the version from .ruby-version
+   bundle install
+   ```
+
+2. Create `fastlane/api_key.json`:
+
+   ```json
+   {
+     "key_id": "ABCD123456",
+     "issuer_id": "00000000-0000-0000-0000-000000000000",
+     "key_filepath": "/absolute/path/to/AuthKey_ABCD123456.p8"
+   }
+   ```
+
+The pipeline has five stages.
+
+```mermaid
+flowchart LR
+  bump_version --> b["beta (TestFlight)"] --> screenshots --> upload_screenshots --> r["release (App Store)"]
 ```
+
+Execute the end-to-end flow with the combined command:
+
+```sh
+bundle exec fastlane ios full_release notes:"Rebuild"
+bundle exec fastlane mac full_release notes:"Rebuild"
+```
+
+Or run individual stages:
 
 1. Bump the marketing version (`CFBundleShortVersionString`) and build number:
 
-   ```bash
+   ```sh
    bundle exec fastlane bump_version           # patch (default): 4.0.1 → 4.0.2
    bundle exec fastlane bump_version bump:minor
    bundle exec fastlane bump_version bump:major
@@ -67,27 +98,37 @@ bump_version  →  beta (TestFlight)  →  release (App Store)
 
 2. Build, sign, and ship to TestFlight. This bumps the build number, archives, exports, and uploads:
 
-   ```bash
-   bundle exec fastlane ios beta # or just `beta` with no ios
+   ```sh
+   bundle exec fastlane ios beta
    bundle exec fastlane mac beta
    ```
 
    Test the build on a real device via TestFlight.
 
-3. Submit to the App Store. This captures screenshots, uploads them to the editable version, attaches the most recent TestFlight build, and submits for review with auto-release on approval. You'll be prompted for the release notes ("What's New" in en-US), or you can pass them inline:
+3. Capture screenshots when needed. The screenshot lanes support quick testing of one locale or one device:
 
-   ```bash
-   bundle exec fastlane ios screenshots            # capture only, no upload
-   bundle exec fastlane ios upload_screenshots     # upload existing screenshots
+   ```sh
+   bundle exec fastlane ios screenshots
+   bundle exec fastlane ios screenshots locales:en-US devices:"iPhone 17 Pro Max"
+
+   bundle exec fastlane mac screenshots
+   bundle exec fastlane mac screenshots locales:en-US devices:"Mac"
+   ```
+
+4. Upload screenshots separately from submission:
+
+   ```sh
+   bundle exec fastlane ios upload_screenshots
+   bundle exec fastlane mac upload_screenshots
+   ```
+
+5. Submit to the App Store. The `release` lanes are submit-only and do not capture or upload screenshots:
+
+   ```sh
    bundle exec fastlane ios release notes:"Rebuild"
-   
-   bundle exec fastlane mac screenshots            # capture only, no upload
-   bundle exec fastlane mac upload_screenshots     # upload existing screenshots
    bundle exec fastlane mac release notes:"Rebuild"
    ```
-   
-   Screenshots are written to `fastlane/screenshots/` and built artifacts to `build/`. Both are gitignored.
 
-#### Note: rsync workaround
+:information_source: If a beta upload fails because the build number is behind App Store Connect, set the project build number once to remote highest + 1, commit, rerun, then continue local increments.
 
-The `before_all` hook in [fastlane/Fastfile](fastlane/Fastfile) strips `/opt/homebrew` and `/usr/local` from `PATH` before `xcodebuild -exportArchive` runs. Without this, Xcode 26's IPA packaging step fails with `Copy failed` because `/usr/bin/rsync` (openrsync 2.6.9) and Homebrew's `rsync` 3.x interpret the `-E` flag differently. Sanitizing `PATH` ensures both ends use openrsync.
+:information_source: The `before_all` hook in [fastlane/Fastfile](fastlane/Fastfile) strips `/opt/homebrew` and `/usr/local` from `PATH` before `xcodebuild -exportArchive` runs. Without this, Xcode 26's IPA packaging step fails with `Copy failed` because `/usr/bin/rsync` (openrsync 2.6.9) and Homebrew's `rsync` 3.x interpret the `-E` flag differently. Sanitizing `PATH` ensures both ends use openrsync.

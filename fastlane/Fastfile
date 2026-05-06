@@ -124,16 +124,24 @@ end
 # ============================================================================
 
 platform :ios do
-  desc "Generate App Store screenshots (iOS)"
-  lane :screenshots do
+  desc "Generate App Store screenshots (iOS). Pass locales:en-US and devices:'iPhone 17 Pro Max' to filter"
+  lane :screenshots do |options|
     repo_root = File.expand_path("..", __dir__)
     project_path = File.join(repo_root, XCODEPROJ)
+    locale_filter = options[:locales].to_s.split(",").map(&:strip).reject(&:empty?)
+    unless locale_filter.empty?
+      UI.user_error!("Only en-US is currently supported") unless locale_filter == ["en-US"]
+    end
+
     output_dir = File.join(repo_root, "fastlane", "screenshots", "en-US")
     cache_dir = File.join(Dir.home, "Library", "Caches", "tools.fastlane")
     cache_screenshots_dir = File.join(cache_dir, "screenshots")
     log_path = File.join(Dir.home, "Library", "Logs", "snapshot", "Vowel Practice-Vowel Practice.log")
     derived_data = Dir.mktmpdir("snapshot_derived")
     devices = ["iPhone 17 Pro Max", "iPad Pro 13-inch (M5)"]
+    device_filter = options[:devices].to_s.split(",").map(&:strip).reject(&:empty?)
+    devices = devices.select { |device| device_filter.include?(device) } unless device_filter.empty?
+    UI.user_error!("No matching iOS devices found for devices filter") if devices.empty?
 
     FileUtils.mkdir_p(output_dir)
     FileUtils.mkdir_p(cache_screenshots_dir)
@@ -211,7 +219,7 @@ platform :ios do
       app_version: current_marketing_version,
       skip_binary_upload: true,
       skip_metadata: false,
-      skip_screenshots: false,
+      skip_screenshots: true,
       overwrite_screenshots: true,
       release_notes: { "en-US" => notes },
       submit_for_review: true,
@@ -225,6 +233,15 @@ platform :ios do
       force: true
     )
   end
+
+  desc "Full pipeline (iOS): bump_version, beta, screenshots, upload_screenshots, release. Pass notes:'...'"
+  lane :full_release do |options|
+    bump_version(bump: options[:bump] || "patch")
+    beta
+    screenshots(options)
+    upload_screenshots
+    release(notes: options[:notes])
+  end
 end
 
 # ============================================================================
@@ -232,8 +249,17 @@ end
 # ============================================================================
 
 platform :mac do
-  desc "Generate Mac App Store screenshots"
-  lane :screenshots do
+  desc "Generate Mac App Store screenshots. Pass locales:en-US and devices:'Mac' to filter"
+  lane :screenshots do |options|
+    locale_filter = options[:locales].to_s.split(",").map(&:strip).reject(&:empty?)
+    unless locale_filter.empty?
+      UI.user_error!("Only en-US is currently supported") unless locale_filter == ["en-US"]
+    end
+    device_filter = options[:devices].to_s.split(",").map(&:strip).reject(&:empty?)
+    unless device_filter.empty?
+      UI.user_error!("Only 'Mac' is currently supported") unless device_filter.any? { |item| item.casecmp("mac").zero? }
+    end
+
     repo_root = File.expand_path("..", __dir__)
     derived_data = File.join(repo_root, "build", "mac_screenshots_dd")
     out_dir = File.join(repo_root, "fastlane", "screenshots", "en-US")
@@ -365,5 +391,14 @@ platform :mac do
       },
       force: true
     )
+  end
+
+  desc "Full pipeline (macOS): bump_version, beta, screenshots, upload_screenshots, release. Pass notes:'...'"
+  lane :full_release do |options|
+    bump_version(bump: options[:bump] || "patch")
+    beta
+    screenshots(options)
+    upload_screenshots
+    release(notes: options[:notes])
   end
 end

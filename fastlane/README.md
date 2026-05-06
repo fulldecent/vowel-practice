@@ -31,7 +31,6 @@ Bump only the build number (used before each beta upload)
 
 ----
 
-
 ## iOS
 
 ### ios screenshots
@@ -41,6 +40,8 @@ Bump only the build number (used before each beta upload)
 ```
 
 Generate App Store screenshots (iOS)
+
+Pass `locales:en-US` and `devices:"iPhone 17 Pro Max"` to filter.
 
 ### ios upload_screenshots
 
@@ -66,8 +67,15 @@ Build a signed iOS .ipa, upload to TestFlight, then bump the build number
 
 Submit the latest TestFlight iOS build for App Store review
 
-----
+### ios full_release
 
+```sh
+[bundle exec] fastlane ios full_release
+```
+
+Full pipeline (iOS): bump_version, beta, screenshots, upload_screenshots, release. Pass notes:'...'
+
+----
 
 ## Mac
 
@@ -78,6 +86,8 @@ Submit the latest TestFlight iOS build for App Store review
 ```
 
 Generate Mac App Store screenshots
+
+Pass `locales:en-US` and `devices:"Mac"` to filter.
 
 ### mac upload_screenshots
 
@@ -102,6 +112,14 @@ Build a signed macOS .pkg, upload to TestFlight, then bump the build number
 ```
 
 Submit the latest TestFlight macOS build for App Store review
+
+### mac full_release
+
+```sh
+[bundle exec] fastlane mac full_release
+```
+
+Full pipeline (macOS): bump_version, beta, screenshots, upload_screenshots, release. Pass notes:'...'
 
 ----
 
