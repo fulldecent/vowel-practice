@@ -68,3 +68,8 @@ fastlane/test_output
 build
 api_key.json
 fastlane/screenshots
+*.p8
+*.p12
+vendor/bundle/
+.bundle/
+.env

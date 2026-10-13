@@ -1,0 +1,87 @@
+# Speech Practice: therapeutic guide
+
+## Introduction to vowel-based speech therapy
+
+Speech Practice helps you improve vowel pronunciation for  speech therapy, accent training, and English as a Second Language (ESL)  learning. The app visualizes formant frequencies/resonances of your  vocal tract that define vowel sounds—allowing you to see and refine your articulation in real time.
+
+## Why monophthongs? The therapeutic foundation
+
+Speech Practice focuses exclusively on **monophthongs** (pure vowel sounds) rather than diphthongs (vowel glides). This choice  is based on established speech therapy and phonetics research:
+
+### Stable articulatory targets
+
+Monophthongs provide fixed tongue and jaw positions that you  can hold and feel. When practicing /i/ (as in "see"), your tongue  maintains a high, front position throughout. This stability allows you  to:
+
+- Develop proprioceptive awareness (knowing where your tongue is)
+- Practice and perfect each position individually
+- Build muscle memory for consistent production
+
+### Building blocks for complex sounds
+
+Diphthongs are simply movements between two monophthong positions. For example:
+
+- /aɪ/ (as in "my") = /a/ → /i/ (glide from low to high front)
+- /oʊ/ (as in "go") = /o/ → /u/ (glide from mid to high back)
+
+By mastering individual monophthong targets first, you naturally gain the ability to produce smooth transitions between them.
+
+### Simplified motor planning
+
+For individuals with speech impairments or those learning  English, monophthongs reduce cognitive and motor complexity. Holding a  single position is easier than coordinating movement, making  monophthongs ideal for:
+
+- Speech therapy for dysarthria or apraxia
+- ESL learners whose native language has different vowel systems
+- Accent modification focusing on vowel clarity
+
+### Clear visual feedback
+
+The formant plot shows stable, distinct regions for each  monophthong. When you produce a pure vowel correctly, your formant  marker (oval) stays consistently in the target region, providing  immediate visual confirmation.
+
+## The ten American English monophthongs
+
+Speech Practice uses the standard set of American English  monophthongs, based on the Hillenbrand et al. (1995) acoustic database.  Each vowel is labeled with:
+
+- **IPA symbol**: international phonetic alphabet notation (e.g., /i/, /æ/, /ɑ/)
+- **Wells keyword**: a standard reference word in small caps (e.g., fleece, trap, lot)
+- **Common words**: example words to help you identify the sound
+
+### High vowels
+
+- **/i/ - fleece**: see, beat, me (high front tense)
+- **/ɪ/ - kit**: sit, bit, if (high front lax)
+- **/u/ - goose**: too, boot, food (high back rounded)
+- **/ʊ/ - foot**: book, put, good (high back lax)
+
+### Mid vowels
+
+- **/ɛ/ - dress**: bed, get, tell (mid front)
+- **/ə/ - comma**: about, sofa, taken (mid central schwa)
+- **/ʌ/ - strut**: but, cup, son (mid back)
+
+### Low vowels
+
+- **/æ/ - trap**: cat, bad, man (low front)
+- **/ɑ/ - lot**: cot, on, pot (low back unrounded)
+- **/ɔ/ - thought**: caught, law, fall (low back rounded)
+
+**Note on excluded vowels**: Pure /e/ and /o/  sounds do not exist as monophthongs in standard American English—they  are pronounced as diphthongs [eɪ] and [oʊ]. These are reserved for  advanced diphthong practice or for ESL learners whose native language  (Spanish, Italian, Japanese) includes these pure vowels.
+
+## Using the Speech Practice app
+
+### Toolbar controls
+
+- **Recording indicator**: a green square appears when the microphone is active, showing that the app is capturing your speech in real time.
+
+- Audio source button
+
+  : tap to select your audio source:                
+
+  - **Microphone**: live recording for practice
+  - **Pre-recorded files**: example vowel sounds (e.g., "arm", "beat") for reference
+
+- Mode picker
+
+  : switch between modes using the segmented control:                
+
+  - **Formant mode** (waveform icon): displays the vowel chart with your formants
+  - **Help mode** (question mark icon): shows 

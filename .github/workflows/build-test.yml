@@ -1,0 +1,54 @@
+# Build and test
+#
+# This repository is an Xcode app, not a Swift package, so the check is
+# `xcodebuild test` rather than `xcrun swift test`.
+#
+# The job uses the GitHub-hosted xcode-27 image because macos-26 stops at
+# Xcode 26.
+# https://github.blog/changelog/2026-07-16-xcode-27-runner-image-now-in-public-preview/
+# https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md
+#
+# The destination is the iPhone 17 simulator on iOS 27.0, which the Xcode 27.0
+# image lists. CODE_SIGNING_ALLOWED=NO lets that simulator build run without a
+# provisioning profile on the runner.
+
+name: Build and test
+
+on:
+  workflow_call:
+  pull_request:
+
+concurrency:
+  group: build-test-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: Build and test
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - name: Check out this commit
+        uses: actions/checkout@v7
+
+      - name: Show build environment
+        run: |
+          xcodebuild -version
+          xcrun swift --version
+
+      - name: Check formatting
+        run: |
+          swift format format --in-place --recursive "Vowel Practice" "Vowel PracticeTests" "Vowel PracticeUITests"
+          git diff --exit-code || (echo 'Code is not formatted. Run: swift format format --in-place --recursive "Vowel Practice" "Vowel PracticeTests" "Vowel PracticeUITests"' && exit 1)
+
+      - name: Test
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project "Vowel Practice.xcodeproj" \
+            -scheme "Vowel Practice" \
+            -destination 'platform=iOS Simulator,name=iPhone 17,OS=27.0' \
+            CODE_SIGNING_ALLOWED=NO

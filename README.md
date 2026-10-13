@@ -4,8 +4,8 @@
 
 Practice all the popular vowels: A, E, I, O, U and more! This app helps you with speech therapy and accent reduction.
 
-<img width="1458" height="1468" alt="Image" src="https://github.com/user-attachments/assets/0da0e886-d6b3-4fdd-bc65-810382045125" />
-<img width="729" height="734" alt="Image" src="https://github.com/user-attachments/assets/60c17d6e-ce56-49f2-b0ee-26e09e6566a8" />
+![Vowel chart](https://github.com/user-attachments/assets/0da0e886-d6b3-4fdd-bc65-810382045125)
+![Recording](https://github.com/user-attachments/assets/60c17d6e-ce56-49f2-b0ee-26e09e6566a8)
 
 The main function of the app is you will speak individual vowel sounds (diphthongs) and the app will show you what we hear. And there is a configuration page to help get better results, this helps if you don't have professional recording gear.
 
@@ -45,90 +45,32 @@ Here are citations and research that this app is based on.
 * <https://github.com/jaekookang/p2fa_py3>
 * <https://github.com/gre/zpeech>
 
-### Releasing a new version
+## Releasing
 
-The release process uses [fastlane](https://fastlane.tools).
+Use `fix:`, `feat:` or `BREAKING CHANGE:` in commit messages. Release Please opens a pull request from those. `ci:` and `chore:` do not. Merging that pull request submits iOS and macOS for App Store review. Do not edit [VERSION](VERSION) or the marketing version by hand.
 
-### One-time setup
+Every push to `main` runs the tests and uploads an iOS build and a macOS build to TestFlight. Both go to the internal group App Store Connect Users for this app. The Apple ID has to accept the invitation before the build appears. The marketing version comes from [VERSION](VERSION). When that version is already on sale, the upload uses the next patch and does not commit it. The review submission uses the version that was uploaded. The build number is chosen at upload time and is not committed.
 
-1. Install Ruby via rbenv (macOS system Ruby is too old for fastlane):
+Store text lives in [fastlane/metadata](fastlane/metadata) and [fastlane/metadata-macos](fastlane/metadata-macos). Screenshots are generated at release time and are not committed. What's New is the newest section of [CHANGELOG.md](CHANGELOG.md).
 
-   ```sh
-   brew install rbenv ruby-build
-   rbenv init # follow the printed shell setup instructions, then restart your shell
-   rbenv install   # installs the version from .ruby-version
-   bundle install
-   ```
+Release Please opens its pull request as `github-actions`. GitHub holds those checks until a person approves the workflow run.
 
-2. Create `fastlane/api_key.json`:
+This follows [swift-app-template](https://github.com/fulldecent/swift-app-template) release 1.1.0 and the release workflow used by [8 Ball Answer](https://github.com/fulldecent/8-ball-answer).
 
-   ```json
-   {
-     "key_id": "ABCD123456",
-     "issuer_id": "00000000-0000-0000-0000-000000000000",
-     "key_filepath": "/absolute/path/to/AuthKey_ABCD123456.p8"
-   }
-   ```
+### Setup
 
-The pipeline has five stages.
+1. GitHub repo > Settings > Actions > General > Workflow permissions: Read and write permissions. Check "Allow GitHub Actions to create and approve pull requests".
+1. Sign the Apple Developer Program agreement.
+1. Repository secrets:
 
-```mermaid
-flowchart LR
-  bump_version --> b["beta (TestFlight)"] --> screenshots --> upload_screenshots --> r["release (App Store)"]
-```
+   * `APP_STORE_CONNECT_KEY_ID`
+   * `APP_STORE_CONNECT_ISSUER_ID`
+   * `APP_STORE_CONNECT_KEY`
+   * `APP_STORE_DISTRIBUTION_P12`
+   * `APP_STORE_DISTRIBUTION_P12_PASSWORD`
+   * `APP_STORE_MAC_INSTALLER_P12`
+   * `APP_STORE_MAC_INSTALLER_P12_PASSWORD`
 
-Execute the end-to-end flow with the combined command:
+The workflow creates the provisioning profiles at build time. The Mac package also needs the installer certificate named in [fastlane/Fastfile](fastlane/Fastfile).
 
-```sh
-bundle exec fastlane ios full_release notes:"Rebuild"
-bundle exec fastlane mac full_release notes:"Rebuild"
-```
-
-Or run individual stages:
-
-1. Bump the marketing version (`CFBundleShortVersionString`) and build number:
-
-   ```sh
-   bundle exec fastlane bump_version           # patch (default): 4.0.1 → 4.0.2
-   bundle exec fastlane bump_version bump:minor
-   bundle exec fastlane bump_version bump:major
-   ```
-
-   Commit the version bump.
-
-2. Build, sign, and ship to TestFlight. This bumps the build number, archives, exports, and uploads:
-
-   ```sh
-   bundle exec fastlane ios beta
-   bundle exec fastlane mac beta
-   ```
-
-   Test the build on a real device via TestFlight.
-
-3. Capture screenshots when needed. The screenshot lanes support quick testing of one locale or one device:
-
-   ```sh
-   bundle exec fastlane ios screenshots
-   bundle exec fastlane ios screenshots locales:en-US devices:"iPhone 17 Pro Max"
-
-   bundle exec fastlane mac screenshots
-   bundle exec fastlane mac screenshots locales:en-US devices:"Mac"
-   ```
-
-4. Upload screenshots separately from submission:
-
-   ```sh
-   bundle exec fastlane ios upload_screenshots
-   bundle exec fastlane mac upload_screenshots
-   ```
-
-5. Submit to the App Store. The `release` lanes are submit-only and do not capture or upload screenshots:
-
-   ```sh
-   bundle exec fastlane ios release notes:"Rebuild"
-   bundle exec fastlane mac release notes:"Rebuild"
-   ```
-
-:information_source: If a beta upload fails because the build number is behind App Store Connect, set the project build number once to remote highest + 1, commit, rerun, then continue local increments.
-
-:information_source: The `before_all` hook in [fastlane/Fastfile](fastlane/Fastfile) strips `/opt/homebrew` and `/usr/local` from `PATH` before `xcodebuild -exportArchive` runs. Without this, Xcode 26's IPA packaging step fails with `Copy failed` because `/usr/bin/rsync` (openrsync 2.6.9) and Homebrew's `rsync` 3.x interpret the `-E` flag differently. Sanitizing `PATH` ensures both ends use openrsync.
+App Privacy, and whether the app uses the Advertising Identifier, stay in App Store Connect. fastlane sends the encryption answer and the third-party content answer.
