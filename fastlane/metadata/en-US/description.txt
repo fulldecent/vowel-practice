@@ -1,0 +1,5 @@
+This application calculates and plots the formant frequencies of spoken vowels. The user should speak a word containing a single vowel, and we will analyze and show results.
+
+First two formant frequencies are used to graphically show the location of spoken vowel on a standard vowel diagram. An indicator light changes its color to display the status of the application.
+
+This is made to assist with speech therapy and language learning as well as other research topics.

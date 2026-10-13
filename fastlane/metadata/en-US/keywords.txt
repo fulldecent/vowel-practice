@@ -1,0 +1,1 @@
+speech,wavesurfer,praat,vocal,sing,fft,spectral,spectrogram,language,speech therapy,transcription
