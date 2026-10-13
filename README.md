@@ -1,5 +1,7 @@
 # Vowel Practice
 
+[![Build and test](https://github.com/fulldecent/vowel-practice/actions/workflows/build-test.yml/badge.svg)](https://github.com/fulldecent/vowel-practice/actions/workflows/build-test.yml) [![Lint](https://github.com/fulldecent/vowel-practice/actions/workflows/lint.yml/badge.svg)](https://github.com/fulldecent/vowel-practice/actions/workflows/lint.yml)
+
 [macOS app](https://apps.apple.com/us/app/vowel-practice/id799183655) / [iOS app](https://apps.apple.com/us/app/vowel-practice/id799183655)
 
 Practice all the popular vowels: A, E, I, O, U and more! This app helps you with speech therapy and accent reduction.
@@ -55,8 +57,6 @@ Store text lives in [fastlane/metadata](fastlane/metadata) and [fastlane/metadat
 
 Release Please opens its pull request as `github-actions`. GitHub holds those checks until a person approves the workflow run.
 
-This follows [swift-app-template](https://github.com/fulldecent/swift-app-template) release 1.1.0 and the release workflow used by [8 Ball Answer](https://github.com/fulldecent/8-ball-answer).
-
 ### Setup
 
 1. GitHub repo > Settings > Actions > General > Workflow permissions: Read and write permissions. Check "Allow GitHub Actions to create and approve pull requests".
@@ -74,3 +74,7 @@ This follows [swift-app-template](https://github.com/fulldecent/swift-app-templa
 The workflow creates the provisioning profiles at build time. The Mac package also needs the installer certificate named in [fastlane/Fastfile](fastlane/Fastfile).
 
 App Privacy, and whether the app uses the Advertising Identifier, stay in App Store Connect. fastlane sends the encryption answer and the third-party content answer.
+
+## References
+
+1. This project is built based on [best practices documented in swift-app-template](https://github.com/fulldecent/swift-app-template), release 1.1.0. The [build-and-test workflow](.github/workflows/build-test.yml), the [lint workflow](.github/workflows/lint.yml), and the [release workflow](.github/workflows/release.yml) are that release's three files. [8 Ball Answer](https://github.com/fulldecent/8-ball-answer) is where the template's upload rules were confirmed. This app ships iOS and macOS, including the Mac installer certificate. The template's sample app is named Counter.
