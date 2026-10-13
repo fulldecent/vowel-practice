@@ -26,6 +26,7 @@ extension View {
 }
 
 #if os(macOS)
+  @MainActor
   enum MacScreenshot {
     static let width: CGFloat = 1440
     static let height: CGFloat = 900
