@@ -1,6 +1,6 @@
 // Vowel Practice
 // (c) William Entriken
-// See LICENSE
+// See LICENSE.md
 
 /// Models a speaker's vocal characteristics for formant classification.
 struct SpeakerProfile {

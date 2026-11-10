@@ -1,6 +1,6 @@
 // MainView.swift
 // (c) William Entriken
-// See LICENSE
+// See LICENSE.md
 
 import SwiftUI
 

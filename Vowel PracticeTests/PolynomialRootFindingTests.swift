@@ -1,6 +1,6 @@
 // Vowel Practice
 // (c) William Entriken
-// See LICENSE
+// See LICENSE.md
 
 import Foundation
 import Numerics
