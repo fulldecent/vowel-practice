@@ -1,6 +1,6 @@
 // Vowel Practice
 // (c) William Entriken
-// See LICENSE
+// See LICENSE.md
 
 /// Represents a vowel with formant frequencies for speech therapy and accent training.
 struct TherapeuticVowel {
